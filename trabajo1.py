@@ -6,7 +6,9 @@
 
 import os
 
-def administraciones() -> None:
+
+# Caracteres: admin_option
+def administraciones():
 	admin_option = ''
 	while admin_option != 'V':
 		os.system('cls')
@@ -42,10 +44,13 @@ def administraciones() -> None:
 			os.system('pause')
 
 
-
-def menu(type: str) -> None:
+# Enteros: i, ban, opcion
+# Cadenas: type
+# Caracteres: menu_option
+def menu(type: str):
 	global productos
 	global cant_productos
+
 	menu_option = ''
 	while menu_option != 'V':
 		os.system('cls')
@@ -119,7 +124,8 @@ def menu(type: str) -> None:
 				os.system('pause')
 
 
-
+# Enteros: ban, i, s, h, opcion
+# Cadenas: opcion2
 def entrega_de_cupos():
 	global total_cupos
 	global cant_productos
@@ -128,8 +134,8 @@ def entrega_de_cupos():
 	global cupones 
 	global estado
 	global producto
-
 	global productos
+
 	opcion2 = ''
 	ban = 0
 	for s in range(3):
@@ -179,7 +185,8 @@ def entrega_de_cupos():
 		print('No hay productos dados de alta!')
 
 
-
+# Cadenas: buscar, opcion
+# Enteros: ban, i
 def recepcion():
 	global total_camiones
 
@@ -212,7 +219,8 @@ def recepcion():
 		os.system('cls')
 
 
-
+# Cadenas: buscar
+# Enteros: ban, i
 def registrar_peso_bruto():
 	global patentes
 	global estado
@@ -238,7 +246,8 @@ def registrar_peso_bruto():
 		print('No se ha encontrado la patente!')
 
 
-
+# Cadenas: buscar
+# Enteros: ban, i
 def registrar_tara():
 	global patentes
 	global estado
@@ -294,7 +303,8 @@ def registrar_tara():
 		print('No se ha encontrado la patente!')
 
 
-
+# Enteros: ban, i
+# Reales: promedio
 def reportes():
 	global total_cupos
 	global total_camiones
@@ -330,6 +340,9 @@ def reportes():
 		print('No se ha ingresado ningun producto!')
 	ordenar_mostrar(producto[:],patentes[:],pesos_brutos[:],taras[:])
 
+
+# Enteros: i, h, aux
+# Char: aux
 def ordenar_mostrar(producto: list[str],patentes: list[str], pesos_brutos: list[int], taras: list[int]):
 
 	for i in range(7):
@@ -362,9 +375,24 @@ def ordenar_mostrar(producto: list[str],patentes: list[str], pesos_brutos: list[
 	else:
 		print('No hay ningun camion listado!')
 
+# TYPE
+# ArrayEntero3 = array[1...3] of int
+# ArrayEntero8 = array[1...8] of int
+# ArrayCadena3 = array[1...3] of string
+# ArrayCadena8 = array[1...8] of string
+# BidEnteros = array[1...3, 1...2] of int
+# BidCadenas = array[1...3, 1...2] of string
 
-
-def menu_principal() -> None:
+# VARIABLES
+# ArrayEntero3: pesos_netos_productos, cant_productos
+# ArrayEntero8: pesos_brutos, taras, cupones
+# ArrayCadena3: productos
+# ArrayCadena8: producto, patentes, estado
+# BidEnteros: mayor_menor_productos
+# BidCadenas: patente_mm_productos
+# Enteros: total_cupos, total_camiones
+# Chars: menu_option
+def menu_principal():
 	
 	global total_cupos
 	global total_camiones 

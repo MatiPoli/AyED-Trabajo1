@@ -113,6 +113,18 @@ def ingresoInt(string):
 			print('Ingrese un numero correcto!\n')
 	return i
 
+def validarInt(num , min, max, string1, string2):
+	while num < min or num > max:
+		print(string1)
+		num = ingresoInt(string2)
+	return num
+
+def validarString(string, min, max, string1, string2):
+	while len(string) < min or len(string) > max:
+		print(string1)
+		string = str(input(string2).upper())
+	return string
+
 # Caracteres: admin_option
 def administraciones():
 	admin_option = ''
@@ -520,17 +532,67 @@ def menu(type: str):
 # Enteros: ban, i, s, h, opcion
 # Cadenas: opcion2
 def entrega_de_cupos():
-	global total_cupos
-	global cant_productos
+	
+	global ArcLogProd, ArcFisiProd
+	global ArcLogOpera, ArcFisiOpera
 
-	global patentes
-	global cupones 
-	global estado
-	#global producto
-	global productos
+	regProd = productos()
+	regOpera = operaciones()
 
-	opcion2 = ''
-	ban = 0
+	print("MENU ENTREGA DE CUPOS")
+	print()
+	patente = str(input("Ingrese la patente: ").upper())
+	patente = validarString(patente,6,7,"Largo de la patente incorrecto!\n","\nIngrese la patente:")
+	patente = patente.ljust(7, ' ')
+	flag = True
+	while flag:
+	    try:
+	        fecha = input("\nIngrese una fecha en formato dd/mm/aaaa: ")
+	        datetime.datetime.strptime(fecha, '%d/%m/%Y')
+	        flag = False
+	    except ValueError:
+	        print("Fecha invalida")
+	fecha = fecha.ljust(15, ' ')
+	tamArch = os.path.getsize(ArcFisiOpera)
+	ban = False
+	ArcLogOpera.seek(0,0)
+	while ArcLogOpera.tell() < tamArch and ban == False:
+		regOpera = pickle.load(ArcLogOpera)
+		
+		if regOpera.patente == patente and regOpera.fecha_cupo == fecha:
+			print("La patente ingresada tiene un cupo asignado en esa fecha!")
+			ban = True
+	if ban == False:
+		print('\nListado de producto(s):')
+		print('\nCodigo\tNombre')
+		ArcLogProd.seek(0,0)
+		tamArch = os.path.getsize(ArcFisiProd)
+		while ArcLogProd.tell() < tamArch:
+			regProd = pickle.load(ArcLogProd)
+			print(str(regProd.codigo) + '\t' + regProd.nombre)
+		cod = ingresoInt('\nIngrese el codigo del producto a asignar: ')
+		cod = validarInt(cod,1,99999,"Codigo incorrecto!\n","\n¿Cual desea eliminar? Ingrese el codigo: ")
+
+		ban = False
+		tamArch = os.path.getsize(ArcFisiProd)
+		ArcLogProd.seek(0,0)
+		while ArcLogProd.tell() < tamArch and ban == False:
+			regProd = pickle.load(ArcLogProd)
+			if int(regProd.codigo) == cod:
+				ban = True
+
+				regOpera.patente = patente
+				regOpera.codigo_producto = cod
+				regOpera.fecha_cupo = fecha
+				regOpera.estado = 'P'
+
+				formatearOperaciones(regOpera)
+				pickle.dump(regOpera, ArcLogOpera)
+				ArcLogOpera.flush()
+		if ban == False:
+			print('No se ha encontrado el producto!')
+
+	print()
 	"""
 	for s in range(3):
 		if productos[s] != '':

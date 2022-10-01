@@ -544,7 +544,7 @@ def menu(type: str):
 					pun = ArcLogSilos.tell()
 					regSilos = pickle.load(ArcLogSilos)
 					puntero = ArcLogSilos.tell()
-					if int(regSiloso.codigo_silo) == 0:
+					if int(regSilos.codigo_silo) == 0:
 						ban = True
 						puntero = pun
 
@@ -574,14 +574,14 @@ def menu(type: str):
 				os.system('pause')
 			elif menu_option == 'C':
 				print('Listado de silo(s):')
-				print('\nCodigo\tNombre\tCodigo\t\tStock')
-				print('Silo\tSilo\tProducto')
-				print('----\t------\t--------\t-----')
+				print('\nCodigo\tNombre\t\tCodigo\t\tStock')
+				print('Silo\tSilo\t\tProducto')
+				print('----\t------\t\t--------\t-----')
 				ArcLogSilos.seek(0,0)
 				tamArch = os.path.getsize(ArcFisiSilos)
 				while ArcLogSilos.tell() < tamArch:
 					regSilos = pickle.load(ArcLogSilos)
-					if int(regSilos.codigo_rubro) != 0:
+					if int(regSilos.codigo_silo) != 0:
 						print(str(regSilos.codigo_silo) + '\t' + regSilos.nombre + '\t' + str(regSilos.codigo_producto) + '\t\t' + str(regSilos.stock))
 
 				print('')
@@ -827,6 +827,9 @@ def registrar_calidad():
 				nombre = buscaDico(regRuXPro.codigo_rubro)
 				print()
 				val = ingresoInt("\n" + str(regRuXPro.codigo_rubro) + '\t' + nombre + '\t\t\t' + "Valor registrado: ")
+				while val < 0:
+					print("Valor incorrecto!")
+					val = ingresoInt("\n" + str(regRuXPro.codigo_rubro) + '\t' + nombre + '\t\t\t' + "Valor registrado: ")
 				if val < int(regRuXPro.valor_minimo_admitido) or val > int(regRuXPro.valor_maximo_admitido):
 					mal = mal + 1
 				ban = True
@@ -847,16 +850,47 @@ def registrar_calidad():
 			pickle.dump(regOpera, ArcLogOpera)
 			ArcLogOpera.flush()
 	else:
-		print("La patente ingresada no ha arribado o ya se ha registrado!")
+		print("La patente ingresada no ha arribado o ya se ha registrado!\n")
 
 
 
 # Cadenas: buscar
 # Enteros: ban, i
 def registrar_peso_bruto():
-	global patentes
-	global estado
-	global pesos_brutos
+	global ArcLogOpera, ArcFisiOpera
+	regOpera = operaciones()
+
+	print("MENU REGISTRAR PESO BRUTO")
+	print()
+	patente = str(input("Ingrese la patente: ").upper())
+	patente = validarString(patente,6,7,"Largo de la patente incorrecto!\n","\nIngrese la patente:")
+	patente = patente.ljust(7, ' ')
+	tamArch = os.path.getsize(ArcFisiOpera)
+	ban = False
+	ArcLogOpera.seek(0,0)
+	while ArcLogOpera.tell() < tamArch and ban == False:
+
+		punt = ArcLogOpera.tell()
+		regOpera = pickle.load(ArcLogOpera)
+
+		if regOpera.patente == patente and regOpera.estado == 'C':
+			regOpera.estado = 'B' #cambio estado a bruto.
+
+			pb = ingresoInt("\nIngrese el peso bruto:") #no se si esta bien asi
+			while pb <= 0:
+				print("Peso bruto incorrecto!")
+				pb = ingresoInt("\n" + str(regRuXPro.codigo_rubro) + '\t' + nombre + '\t\t\t' + "Valor registrado: ")
+			regOpera.bruto = pb
+
+			ArcLogOpera.seek(punt,0)
+			formatearOperaciones(regOpera)
+			pickle.dump(regOpera, ArcLogOpera)
+			print("Peso bruto asignado correctamente!\n")
+			ArcLogOpera.flush()
+			ban = True
+
+	if ban == False:
+		print("La patente ingresada no se ha aprobado o ya se ha registrado!\n")
 
 	"""
 	buscar = str(input('Ingrese la patente a buscar: ').upper())
@@ -881,17 +915,65 @@ def registrar_peso_bruto():
 # Cadenas: buscar
 # Enteros: ban, i
 def registrar_tara():
-	global patentes
-	global estado
-	global pesos_brutos
-	global taras
+	global ArcLogOpera, ArcFisiOpera
+	global ArcLogSilos, ArcFisiSilos
 
-	global pesos_netos_productos
-	#global productos
-	global producto
+	regOpera = operaciones()
+	regSilos = silos()
 
-	global mayor_menor_productos
-	global patente_mm_productos
+	print("MENU REGISTRAR TARA")
+	print()
+	patente = str(input("Ingrese la patente: ").upper())
+	patente = validarString(patente,6,7,"Largo de la patente incorrecto!\n","\nIngrese la patente:")
+	patente = patente.ljust(7, ' ')
+	tamArch = os.path.getsize(ArcFisiOpera)
+	ban = False
+	ban2 = False
+	ArcLogOpera.seek(0,0)
+
+	while ArcLogOpera.tell() < tamArch and ban == False:
+
+		punt = ArcLogOpera.tell()
+		regOpera = pickle.load(ArcLogOpera)
+
+		if patente == regOpera.patente and regOpera.estado == 'B':
+			#regOpera.estado == 'F'
+
+			
+			tara = ingresoInt("\nIngrese la tara: ") 
+			while int(regOpera.bruto) < tara:
+				print("La tara no puede ser menor al peso bruto!")
+				tara = ingresoInt("\nIngrese la tara: ")
+			
+			peso_neto = int(regOpera.bruto) - tara
+			ArcLogSilos.seek(0,0)
+			tamArchS = os.path.getsize(ArcFisiSilos)
+
+			while ArcLogSilos.tell() < tamArchS and ban == False:
+
+				punt2 = ArcLogSilos.tell()
+				regSilos = pickle.load(ArcLogSilos)
+				if regOpera.codigo_producto == regSilos.codigo_producto:
+					ban = True
+					regSilos.stock = int(regSilos.stock) + peso_neto
+
+					ArcLogSilos.seek(punt2,0) 
+					formatearSilos(regSilos) # revisar formateo
+					pickle.dump(regSilos, ArcLogSilos) #subo el nuevo registro
+					ArcLogSilos.flush()
+
+					regOpera.estado == 'F' #paso a finalizado
+					ArcLogOpera.seek(punt,0)
+					formatearOperaciones(regOpera)
+					pickle.dump(regOpera, ArcLogOpera)
+					ArcLogOpera.flush()
+					print("Tara asignado correctamente!\n")
+
+				ban2 = True
+			ban = True
+	if ban2 == False:
+		print('No hay silos asignados a este producto!\n')
+
 	"""
 	buscar = str(input('Ingrese la patente a buscar: ').upper())
 	while len(buscar) != 8 and len(buscar) != 7:

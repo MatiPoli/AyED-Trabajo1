@@ -55,33 +55,33 @@ def formatearOperaciones(rOpera):
 	rOpera.tara = rOpera.tara.ljust(10, ' ')
 
 def formatearProductos(rProducto):
-    rProducto.codigo = str(rProducto.codigo)
-    rProducto.codigo = rProducto.codigo.ljust(5, ' ')
-    rProducto.nombre = rProducto.nombre.ljust(15, ' ')
+	rProducto.codigo = str(rProducto.codigo)
+	rProducto.codigo = rProducto.codigo.ljust(5, ' ')
+	rProducto.nombre = rProducto.nombre.ljust(15, ' ')
 
 def formatearRubros(rRubro):
-    rRubro.codigo = str(rRubro.codigo)
-    rRubro.codigo = rRubro.codigo.ljust(5, ' ')
-    rRubro.nombre = rRubro.nombre.ljust(15, ' ')
+	rRubro.codigo = str(rRubro.codigo)
+	rRubro.codigo = rRubro.codigo.ljust(5, ' ')
+	rRubro.nombre = rRubro.nombre.ljust(15, ' ')
 
 def formatearRubrosxProducto(rRxP):
-    rRxP.codigo_rubro = str(rRxP.codigo_rubro)
-    rRxP.codigo_rubro = rRxP.codigo_rubro.ljust(5, ' ')
-    rRxP.codigo_producto = str(rRxP.codigo_producto)
-    rRxP.codigo_producto = rRxP.codigo_producto.ljust(5, ' ')
-    rRxP.valor_minimo_admitido = str(rRxP.valor_minimo_admitido)
-    rRxP.valor_minimo_admitido = rRxP.valor_minimo_admitido.ljust(5, ' ')
-    rRxP.valor_maximo_admitido = str(rRxP.valor_maximo_admitido)
-    rRxP.valor_maximo_admitido = rRxP.valor_maximo_admitido.ljust(5, ' ')
+	rRxP.codigo_rubro = str(rRxP.codigo_rubro)
+	rRxP.codigo_rubro = rRxP.codigo_rubro.ljust(5, ' ')
+	rRxP.codigo_producto = str(rRxP.codigo_producto)
+	rRxP.codigo_producto = rRxP.codigo_producto.ljust(5, ' ')
+	rRxP.valor_minimo_admitido = str(rRxP.valor_minimo_admitido)
+	rRxP.valor_minimo_admitido = rRxP.valor_minimo_admitido.ljust(5, ' ')
+	rRxP.valor_maximo_admitido = str(rRxP.valor_maximo_admitido)
+	rRxP.valor_maximo_admitido = rRxP.valor_maximo_admitido.ljust(5, ' ')
 
 def formatearSilos(rSilos):
-    rSilos.codigo_silo = str(rSilos.codigo_silo)
-    rSilos.codigo_silo = rSilos.codigo_silo.ljust(5, ' ')
-    rSilos.nombre = rSilos.nombre.ljust(15, ' ')
-    rSilos.codigo_producto = str(rSilos.codigo_producto)
-    rSilos.codigo_producto = rSilos.codigo_producto.ljust(5, ' ')
-    rSilos.stock = str(rSilos.stock)
-    rSilos.stock = rSilos.stock.ljust(10, ' ')
+	rSilos.codigo_silo = str(rSilos.codigo_silo)
+	rSilos.codigo_silo = rSilos.codigo_silo.ljust(5, ' ')
+	rSilos.nombre = rSilos.nombre.ljust(15, ' ')
+	rSilos.codigo_producto = str(rSilos.codigo_producto)
+	rSilos.codigo_producto = rSilos.codigo_producto.ljust(5, ' ')
+	rSilos.stock = str(rSilos.stock)
+	rSilos.stock = rSilos.stock.ljust(10, ' ')
 
 def ordenaRubro():
 	global ArcFisiRubro, ArcLogRubro
@@ -124,6 +124,33 @@ def validarString(string, min, max, string1, string2):
 		print(string1)
 		string = str(input(string2).upper())
 	return string
+
+def buscaDico(num):
+	global ArcFisiRubro, ArcLogRubro
+	regRubro = rubros_x_producto()
+	ArcLogRubro.seek (0, 0)
+	aux = pickle.load(ArcLogRubro)
+	tamReg = ArcLogRubro.tell() 
+	cantReg = int(os.path.getsize(ArcFisiRubro) / tamReg)
+	inferior = 0
+	superior = cantReg-1
+	medio = (inferior + superior) // 2 					
+	ArcLogRubro.seek(medio*tamReg, 0)
+	regRubro= pickle.load(ArcLogRubro) 					
+	while int(regRubro.codigo)!= int(num) and (inferior < superior):
+		if int(num) < int(regRubro.codigo):
+			superior = medio - 1
+		else:
+			inferior = medio + 1
+		medio = (inferior + superior) // 2 
+		ArcLogRubro.seek(medio*tamReg, 0)
+		regRubro = pickle.load(ArcLogRubro)
+	
+	ArcLogRubro.seek(medio*tamReg, 0)			
+	regRubro= pickle.load(ArcLogRubro)
+	return regRubro.nombre
+
+
 
 # Caracteres: admin_option
 def administraciones():
@@ -199,10 +226,12 @@ def menu(type: str):
 				puntero = tamArch
 				ArcLogProd.seek(0,0)
 				while ArcLogProd.tell() < tamArch and ban == False:
-					puntero = ArcLogProd.tell()
+					pun = ArcLogProd.tell()
 					regProd = pickle.load(ArcLogProd)
+					puntero = ArcLogProd.tell()
 					if int(regProd.codigo) == 0:
 						ban = True
+						puntero = pun
 				regProd.codigo = ingresoInt('Ingrese el codigo:')
 				while regProd.codigo <= 0 or regProd.codigo >= 100000:
 					print('Codigo incorrecto!\n')
@@ -351,10 +380,12 @@ def menu(type: str):
 				puntero = tamArch
 				ArcLogRubro.seek(0,0)
 				while ArcLogRubro.tell() < tamArch and ban == False:
-					puntero = ArcLogRubro.tell()
+					pun = ArcLogRubro.tell()
 					regRubro = pickle.load(ArcLogRubro)
+					puntero = ArcLogRubro.tell()
 					if int(regRubro.codigo) == 0:
 						ban = True
+						pun = puntero
 				regRubro.codigo = ingresoInt('Ingrese el codigo: ')
 				while regRubro.codigo <= 0 or regRubro.codigo >= 100000:
 					print('Codigo incorrecto!\n')
@@ -403,10 +434,13 @@ def menu(type: str):
 				puntero = tamArch
 				ArcLogRuXPro.seek(0,0)
 				while ArcLogRuXPro.tell() < tamArch and ban == False:
-					puntero = ArcLogRuXPro.tell()
+					pun = ArcLogRuXPro.tell()
 					regRuXPro = pickle.load(ArcLogRuXPro)
+					puntero = ArcLogRuXPro.tell()
+
 					if int(regRuXPro.codigo_rubro) == 0:
 						ban = True
+						pun = puntero
 
 				print('\nListado de producto(s):')
 				print('\nCodigo\tNombre')
@@ -507,10 +541,13 @@ def menu(type: str):
 				puntero = tamArch
 				ArcLogSilos.seek(0,0)
 				while ArcLogSilos.tell() < tamArch and ban == False:
-					puntero = ArcLogSilos.tell()
+					pun = ArcLogSilos.tell()
 					regSilos = pickle.load(ArcLogSilos)
+					puntero = ArcLogSilos.tell()
 					if int(regSiloso.codigo_silo) == 0:
 						ban = True
+						puntero = pun
+
 				regSilos.codigo_silo = ingresoInt('Ingrese el codigo del silo: ')
 				while regSilos.codigo_silo <= 0 or regSilos.codigo_silo >= 100000:
 					print('Codigo incorrecto!\n')
@@ -585,12 +622,12 @@ def entrega_de_cupos():
 	patente = patente.ljust(7, ' ')
 	flag = True
 	while flag:
-	    try:
-	        fecha = input("\nIngrese una fecha en formato dd/mm/aaaa: ")
-	        datetime.datetime.strptime(fecha, '%d/%m/%Y')
-	        flag = False
-	    except ValueError:
-	        print("Fecha invalida")
+		try:
+			fecha = input("\nIngrese una fecha en formato dd/mm/aaaa: ")
+			datetime.datetime.strptime(fecha, '%d/%m/%Y')
+			flag = False
+		except ValueError:
+			print("Fecha invalida")
 	fecha = fecha.ljust(15, ' ')
 	tamArch = os.path.getsize(ArcFisiOpera)
 	ban = False
@@ -627,6 +664,7 @@ def entrega_de_cupos():
 				regOpera.estado = 'P'
 
 				formatearOperaciones(regOpera)
+				ArcLogOpera.seek(0,2)
 				pickle.dump(regOpera, ArcLogOpera)
 				ArcLogOpera.flush()
 		if ban == False:
@@ -685,10 +723,46 @@ def entrega_de_cupos():
 # Cadenas: buscar, opcion
 # Enteros: ban, i
 def recepcion():
-	global total_camiones
+	global ArcLogProd, ArcFisiProd
+	global ArcLogOpera, ArcFisiOpera
 
-	global patentes
-	global estado
+	regProd = productos()
+	regOpera = operaciones()
+	opcion = ''
+	while opcion not in ['NO' , 'N']:
+		print("MENU RECEPCION")
+		print()
+		hoy = datetime.datetime.now().strftime('%d/%m/%Y')
+
+		patente = str(input("Ingrese la patente: ").upper())
+		patente = validarString(patente,6,7,"Largo de la patente incorrecto!\n","\nIngrese la patente: ")
+		patente = patente.ljust(7,' ')
+		hoy = hoy.ljust(15, ' ')
+
+		tamArch = os.path.getsize(ArcFisiOpera)
+		ban = False
+		ArcLogOpera.seek(0,0)
+		while ArcLogOpera.tell() < tamArch and ban == False:
+			punt = ArcLogOpera.tell()
+			regOpera = pickle.load(ArcLogOpera)
+
+			if regOpera.patente == patente and regOpera.estado == 'P' and regOpera.fecha_cupo == hoy:
+				regOpera.estado = 'A'
+				ArcLogOpera.seek(punt, 0)
+
+				formatearOperaciones(regOpera)
+				pickle.dump(regOpera, ArcLogOpera)
+				print("Camion arribado... \n")
+				ArcLogOpera.flush()
+				ban = True
+		if ban == False:
+			print("No se ha encontrado cupos para el dia de hoy!")
+		opcion: str = input('Desea ingresar otro camion? (S/N): ').upper()
+		while opcion not in ['YES', 'NO', 'N' , 'SI' , 'Y' , 'S']:
+			print('Opcion incorrecta!')
+			opcion: str = input('Desea ingresar otro camion? (S/N): ').upper()
+		os.system('cls')
+
 	"""
 	opcion = ''
 	while opcion not in ['NO' , 'N']:
@@ -715,6 +789,67 @@ def recepcion():
 			opcion: str = input('Desea ingresar otro camion? (S/N): ').upper()
 		os.system('cls')
 	"""
+
+def registrar_calidad():
+
+	global ArcLogOpera, ArcFisiOpera
+	global ArcLogRuXPro, ArcFisiRuXPro
+
+	regOpera = operaciones()
+	reguXPro = rubros_x_producto()
+
+	print("MENU REGISTRAR CALIDAD")
+	print()
+	patente = str(input("Ingrese la patente: ").upper())
+	patente = validarString(patente,6,7,"Largo de la patente incorrecto!\n","\nIngrese la patente:")
+	patente = patente.ljust(7, ' ')
+
+	tamArch = os.path.getsize(ArcFisiOpera)
+	ban = False
+	ArcLogOpera.seek(0,0)
+	while ArcLogOpera.tell() < tamArch and ban == False:
+		punt = ArcLogOpera.tell()
+		regOpera = pickle.load(ArcLogOpera)
+		
+		if regOpera.patente == patente and regOpera.estado == 'A':
+			ban = True
+	if ban == True:
+		ban = False
+		mal = 0
+		print('\nListado de rubros(s):')
+		print('\nCodigo\tNombre')
+		print('------\t--------')
+		ArcLogRuXPro.seek(0,0)
+		tamArch = os.path.getsize(ArcFisiRuXPro)
+		while ArcLogRuXPro.tell() < tamArch:
+			regRuXPro = pickle.load(ArcLogRuXPro)
+			if regRuXPro.codigo_producto == regOpera.codigo_producto:
+				nombre = buscaDico(regRuXPro.codigo_rubro)
+				print()
+				val = ingresoInt("\n" + str(regRuXPro.codigo_rubro) + '\t' + nombre + '\t\t\t' + "Valor registrado: ")
+				if val < int(regRuXPro.valor_minimo_admitido) or val > int(regRuXPro.valor_maximo_admitido):
+					mal = mal + 1
+				ban = True
+		if ban == False:
+			print('\nNo se han registrados rubros asignados al producto!')
+		elif mal >= 2:
+			print('\nNo se ha pasado el registro de calidad!')
+			regOpera.estado = 'R'
+			ArcLogOpera.seek(punt, 0)
+			formatearOperaciones(regOpera)
+			pickle.dump(regOpera, ArcLogOpera)
+			ArcLogOpera.flush()
+		else:
+			print('\nSe ha pasado el registro de calidad!')
+			regOpera.estado = 'C'
+			ArcLogOpera.seek(punt, 0)
+			formatearOperaciones(regOpera)
+			pickle.dump(regOpera, ArcLogOpera)
+			ArcLogOpera.flush()
+	else:
+		print("La patente ingresada no ha arribado o ya se ha registrado!")
+
+
 
 # Cadenas: buscar
 # Enteros: ban, i
@@ -1000,10 +1135,9 @@ def menu_principal():
 		elif menu_option == '3':
 			os.system('cls')
 			recepcion()
-			os.system('pause')
 		elif menu_option == '4':
 			os.system('cls')
-			print('Esta funcionalidad esta en construccion')
+			registrar_calidad()
 			os.system('pause')
 		elif menu_option == '5':
 			os.system('cls')

@@ -407,21 +407,60 @@ def menu(type: str):
 					regRuXPro = pickle.load(ArcLogRuXPro)
 					if int(regRuXPro.codigo_rubro) == 0:
 						ban = True
-				regRuXPro.codigo_rubro = ingresoInt('Ingrese el codigo del rubro: ')
-				while regRuXPro.codigo_rubro <= 0 or regRuXPro.codigo_rubro >= 100000:
-					print('Codigo incorrecto!\n')
-					regRuXPro.codigo_rubro = ingresoInt('Ingrese el codigo del rubro: ')
-	
-				regRuXPro.codigo_producto = ingresoInt('\nIngrese el codigo del producto: ')
-				while regRuXPro.codigo_producto <= 0 or regRuXPro.codigo_producto >= 100000:
-					print('Codigo incorrecto!\n')
-					regRuXPro.codigo_producto = ingresoInt('Ingrese el codigo del producto: ')
+
+				print('\nListado de producto(s):')
+				print('\nCodigo\tNombre')
+				print('------\t------')
+				ArcLogProd.seek(0,0)
+				tamArch = os.path.getsize(ArcFisiProd)
+				while ArcLogProd.tell() < tamArch:
+					regProd = pickle.load(ArcLogProd)
+					print(str(regProd.codigo) + '\t' + regProd.nombre)
+				ArcLogRubro.seek(0,0)
+				ban = False
+				while ban == False:
+					cod = ingresoInt('\nIngrese el codigo del producto a asignar: ')
+					cod = validarInt(cod,1,99999,"Codigo incorrecto!\n","\nIngrese el codigo del producto a asignar: ")
+
+					ban = False
+					tamArch = os.path.getsize(ArcFisiProd)
+					ArcLogProd.seek(0,0)
+					while ArcLogProd.tell() < tamArch and ban == False:
+						regProd = pickle.load(ArcLogProd)
+						if int(regProd.codigo) == cod:
+							ban = True
+							regRuXPro.codigo_producto = cod
+					if ban == False:
+						print('No se ha encontrado el producto!')
+
+				print('\nListado de rubro(s):')
+				print('\nCodigo\tNombre')
+				print('------\t------')
+				tamArch = os.path.getsize(ArcFisiRubro)
+				while ArcLogRubro.tell() < tamArch:
+					regRubro = pickle.load(ArcLogRubro)
+					if int(regRubro.codigo) != 0:
+						print(str(regRubro.codigo) + '\t' + regRubro.nombre)
+				ban = False
+				while ban == False:
+					cod = ingresoInt('\nIngrese el codigo del rubro a asignar: ')
+					cod = validarInt(cod,1,99999,"Codigo incorrecto!\n","\nIngrese el codigo del rubro a asignar: ")
+
+					ban = False
+					tamArch = os.path.getsize(ArcFisiRubro)
+					ArcLogRubro.seek(0,0)
+					while ArcLogRubro.tell() < tamArch and ban == False:
+						regRubro = pickle.load(ArcLogRubro)
+						if int(regRubro.codigo) == cod:
+							ban = True
+							regRuXPro.codigo_rubro = cod
+					if ban == False:
+						print('No se ha encontrado el producto!')
+
 
 				regRuXPro.valor_minimo_admitido = ingresoInt('\nIngrese el valor minimo admitido: ')
-				while regRuXPro.valor_minimo_admitido < 0 and regRuXPro.valor_minimo_admitido > 99:
-					print('Minimo menor que 0 o mayor que 99!\n')
-					regRuXPro.valor_minimo_admitido = ingresoInt('Ingrese el valor minimo admitido: ')
-				
+				regRuXPro.valor_minimo_admitido = validarInt(regRuXPro.valor_minimo_admitido,0,99,'Minimo menor que 0 o mayor que 99!\n','Ingrese el valor minimo admitido: ')
+
 				regRuXPro.valor_maximo_admitido = ingresoInt('\nIngrese el valor maximo admitido: ')
 				while regRuXPro.valor_maximo_admitido > 100 and regRuXPro.valor_maximo_admitido > regRuXPro.valor_minimo_admitido:
 					print('Maximo mayor que 100 o menor/igual que el valor minimo!\n')
@@ -565,13 +604,14 @@ def entrega_de_cupos():
 	if ban == False:
 		print('\nListado de producto(s):')
 		print('\nCodigo\tNombre')
+		print('------\t------')
 		ArcLogProd.seek(0,0)
 		tamArch = os.path.getsize(ArcFisiProd)
 		while ArcLogProd.tell() < tamArch:
 			regProd = pickle.load(ArcLogProd)
 			print(str(regProd.codigo) + '\t' + regProd.nombre)
 		cod = ingresoInt('\nIngrese el codigo del producto a asignar: ')
-		cod = validarInt(cod,1,99999,"Codigo incorrecto!\n","\n¿Cual desea eliminar? Ingrese el codigo: ")
+		cod = validarInt(cod,1,99999,"Codigo incorrecto!\n","\nIngrese el codigo del producto a asignar: ")
 
 		ban = False
 		tamArch = os.path.getsize(ArcFisiProd)

@@ -376,9 +376,9 @@ def menu(type: str):
 		elif type == "Rubros":
 			if menu_option == 'A':
 				ban = False
+				ArcLogRubro.seek(0,0)
 				tamArch = os.path.getsize(ArcFisiRubro)
 				puntero = tamArch
-				ArcLogRubro.seek(0,0)
 				while ArcLogRubro.tell() < tamArch and ban == False:
 					pun = ArcLogRubro.tell()
 					regRubro = pickle.load(ArcLogRubro)
@@ -394,6 +394,7 @@ def menu(type: str):
 				while len(regRubro.nombre) <= 0 or len(regRubro.nombre) > 15:
 					print('Largo del nombre incorrecto!\n')
 					regRubro.nombre = str(input('Ingrese el nombre: ').upper())
+
 				formatearRubros(regRubro)
 				ArcLogRubro.seek(puntero,0)
 				pickle.dump(regRubro, ArcLogRubro)
@@ -826,10 +827,10 @@ def registrar_calidad():
 			if regRuXPro.codigo_producto == regOpera.codigo_producto:
 				nombre = buscaDico(regRuXPro.codigo_rubro)
 				print()
-				val = ingresoInt("\n" + str(regRuXPro.codigo_rubro) + '\t' + nombre + '\t\t\t' + "Valor registrado: ")
+				val = ingresoInt(str(regRuXPro.codigo_rubro) + '\t' + nombre + '\t\t' + "Valor registrado: ")
 				while val < 0:
 					print("Valor incorrecto!")
-					val = ingresoInt("\n" + str(regRuXPro.codigo_rubro) + '\t' + nombre + '\t\t\t' + "Valor registrado: ")
+					val = ingresoInt(str(regRuXPro.codigo_rubro) + '\t' + nombre + '\t\t' + "Valor registrado: ")
 				if val < int(regRuXPro.valor_minimo_admitido) or val > int(regRuXPro.valor_maximo_admitido):
 					mal = mal + 1
 				ban = True
@@ -1031,6 +1032,7 @@ def reportes():
 	global pesos_brutos
 	global taras
 
+
 	"""
 	os.system('cls')
 	print('REPORTES\n')
@@ -1058,38 +1060,56 @@ def reportes():
 
 # Enteros: i, h, aux
 # Char: aux
-def ordenar_mostrar(producto: list[str],patentes: list[str], pesos_brutos: list[int], taras: list[int]):
-	"""
-	for i in range(7):
-		for h in range(i+1,8):
-			if (pesos_brutos[h]-taras[h]) > (pesos_brutos[i]-taras[i]):
-				aux = pesos_brutos[i]
-				pesos_brutos[i] = pesos_brutos[h]
-				pesos_brutos[h] = aux
+def listado_silos_rechazos():
 
-				aux = taras[i]
-				taras[i] = taras[h]
-				taras[h] = aux
+	global ArcLogOpera, ArcFisiOpera
+	global ArcLogSilos, ArcFisiSilos
+	mayor = 0
+	maxSilo = ''
 
-				aux = patentes[i]
-				patentes[i] = patentes[h]
-				patentes[h] = aux
+	regOpera = operaciones()
+	regSilos = silos()
 
-				aux = producto[i]
-				producto[i] = producto[h]
-				producto[h] = aux
+	print("MENU LISTADO DE SILOS Y RECHAZOS")
+	print()
 
-	print('\nListado de camione(s) ordenados descendentemente por peso neto:')
-	i = 0
-	if patentes[i] != '':
-		while i < 8:
-			print(f'- {patentes[i]} | {producto[i]} | {(pesos_brutos[i]-taras[i]):.2f}')
-			if patentes[i] == '':
-				i = 7
-			i = i + 1
-	else:
-		print('No hay ningun camion listado!')
-	"""
+	flag = True
+	while flag:
+		try:
+			fecha = input("\nIngrese una fecha en formato dd/mm/aaaa: ")
+			datetime.datetime.strptime(fecha, '%d/%m/%Y')
+			flag = False
+		except ValueError:
+			print("Fecha invalida")
+	fecha = fecha.ljust(15, ' ')
+
+	ArcLogSilos.seek(0,0)
+	tamArchS = os.path.getsize(ArcFisiSilos)
+
+	while ArcLogSilos.tell() < tamArchS:
+
+		regSilos = pickle.load(ArcLogSilos)
+		if int(regSilos.stock) > mayor:
+			maxSilo = regSilos.nombre
+			mayor = int(regSilos.stock)
+
+	print("\nEl silo con mayor stock fue: Silo " + maxSilo)
+	print()
+
+	ArcLogOpera.seek(0,0)
+	tamArchO = os.path.getsize(ArcFisiOpera)
+	ban = False
+	print("Listado de camiones rechazados el dia " + fecha)
+	while ArcLogOpera.tell() < tamArchO:
+
+		regOpera = pickle.load(ArcLogOpera)
+		if regOpera.fecha_cupo == fecha and regOpera.estado == 'R':
+			ban = True
+			print("- ", regOpera.patente)
+
+	if ban == False:
+		print("\nNo hay camiones rechazado en esta fecha!")
+	print()
 ### Programa Principal ###
 
 # TYPE
@@ -1110,45 +1130,6 @@ def ordenar_mostrar(producto: list[str],patentes: list[str], pesos_brutos: list[
 # Enteros: total_cupos, total_camiones
 # Chars: menu_option
 def menu_principal():
-	
-	global total_cupos
-	global total_camiones 
-
-	total_cupos = 0
-	total_camiones = 0
-
-	global mayor_menor_productos
-	mayor_menor_productos = [[0,0],[0,0],[0,0]]
-
-	global patente_mm_productos
-	patente_mm_productos = [['',''],['',''],['','']]
-
-	global pesos_netos_productos
-	pesos_netos_productos = [0] * 3
-
-	global cant_productos
-	cant_productos = [0] * 3
-
-	#global productos
-	#productos = [''] * 3
-
-	global producto 
-	producto = [''] * 8
-
-	global patentes
-	patentes = [''] * 8
-
-	global pesos_brutos
-	pesos_brutos = [0] * 8
-
-	global taras
-	taras = [0] * 8
-
-	global cupones
-	cupones = [0] * 8
-
-	global estado
-	estado = [''] * 8
 
 	global ArcFisiOpera
 	global ArcFisiProd
@@ -1205,6 +1186,7 @@ def menu_principal():
 		print('[6] Registrar descarga')
 		print('[7] Registrar tara')
 		print('[8] Reportes')
+		print('[9] Listado de silos y rechazos')
 		print('[0] Salir')
 		menu_option: str = input('Opcion: ')
 		print('')
@@ -1234,7 +1216,12 @@ def menu_principal():
 			registrar_tara()
 			os.system('pause')
 		elif menu_option == '8':
+			os.system('cls')
 			reportes()
+			os.system('pause')
+		elif menu_option == '9':
+			os.system('cls')
+			listado_silos_rechazos()
 			os.system('pause')
 		elif menu_option == '0':
 			ArcLogOpera.close()

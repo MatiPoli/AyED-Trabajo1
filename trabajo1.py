@@ -18,10 +18,15 @@ class operaciones:
 		self.estado = " "
 		self.bruto = 0
 		self.tara = 0
+
 class productos:
 	def __init__(self):
 		self.codigo = 0
 		self.nombre = " "
+		self.cant_camiones = 0
+		self.neto = 0
+		self.patente_menos = " "
+		self.cant_menos = 0
 
 class rubros:
 	def __init__(self):
@@ -42,7 +47,6 @@ class silos:
 		self.codigo_producto = 0
 		self.stock = 0
 
-
 def formatearOperaciones(rOpera):
 	rOpera.patente = rOpera.patente.ljust(7, ' ')
 	rOpera.codigo_producto = str(rOpera.codigo_producto)
@@ -58,6 +62,13 @@ def formatearProductos(rProducto):
 	rProducto.codigo = str(rProducto.codigo)
 	rProducto.codigo = rProducto.codigo.ljust(5, ' ')
 	rProducto.nombre = rProducto.nombre.ljust(15, ' ')
+	rProducto.cant_camiones = str(rProducto.cant_camiones)
+	rProducto.cant_camiones = rProducto.cant_camiones.ljust(7, ' ')
+	rProducto.neto = str(rProducto.neto)
+	rProducto.neto = rProducto.neto.ljust(10, ' ')
+	rProducto.patente_menos = rProducto.patente_menos.ljust(7, ' ')
+	rProducto.cant_menos = str(rProducto.cant_menos)
+	rProducto.cant_menos = rProducto.cant_menos.ljust(10, ' ')
 
 def formatearRubros(rRubro):
 	rRubro.codigo = str(rRubro.codigo)
@@ -124,6 +135,7 @@ def validarString(string, min, max, string1, string2):
 		print(string1)
 		string = str(input(string2).upper())
 	return string
+
 def estaSilos(cod):
 	global ArcLogSilos
 	global ArcFisiSilos
@@ -136,6 +148,7 @@ def estaSilos(cod):
 		if int(regSilos.codigo_silo) == cod:
 			return True
 	return False
+
 def estaSProd(cod):
 	global ArcLogSilos
 	global ArcFisiSilos
@@ -149,6 +162,44 @@ def estaSProd(cod):
 			return True
 	return False
 
+def estaOProd(cod):
+	global ArcLogOpera
+	global ArcFisiOpera
+	tamArch = os.path.getsize(ArcFisiOpera)
+	ban = False
+	regOpera = operaciones()
+	ArcLogOpera.seek(0, 0)
+	while ArcLogOpera.tell() < tamArch and ban == False:
+		regOpera = pickle.load(ArcLogOpera)
+		if int(regOpera.codigo_producto) == cod:
+			return True
+	return False
+
+def estaProdRubro(cod):
+	global ArcLogRuXPro
+	global ArcFisiRuXPro
+	tamArch = os.path.getsize(ArcFisiRuXPro)
+	ban = False
+	regRuXPro = rubros_x_producto()
+	ArcLogRuXPro.seek(0, 0)
+	while ArcLogRuXPro.tell() < tamArch and ban == False:
+		regRuXPro = pickle.load(ArcLogRuXPro)
+		if int(regRuXPro.codigo_producto) == cod or int(regRuXPro.codigo_rubro) == cod:
+			return True
+	return False
+
+def buscaProd(cod):
+	global ArcLogProd, ArcFisiProd
+	tamArch = os.path.getsize(ArcFisiProd)
+	ArcLogProd.seek(0,0)
+	regProd = productos()
+	ban = False
+	while ArcLogProd.tell() < tamArch and ban == False:
+		punt = ArcLogProd.tell()
+		regProd = pickle.load(ArcLogProd)
+		if int(regProd.codigo) == int(cod):
+			ban = True
+	return punt
 
 def buscaDico(num):
 	global ArcFisiRubro, ArcLogRubro
@@ -230,7 +281,6 @@ def menu(type: str):
 	regRubro = rubros()
 	regRuXPro = rubros_x_producto()
 	regSilos = silos()
-	regSilos2 = silos()
 
 	while menu_option != 'V':
 		os.system('cls')
@@ -289,27 +339,36 @@ def menu(type: str):
 				if tamArch != 0:
 					while ArcLogProd.tell() < tamArch:
 						regProd = pickle.load(ArcLogProd)
-						print(str(regProd.codigo) + '\t' + regProd.nombre)
+						if int(regProd.codigo) != 0:
+							print(str(regProd.codigo) + '\t' + regProd.nombre)
 					cod = ingresoInt('\n¿Cual desea eliminar? Ingrese el codigo: ')
 					cod = validarInt(cod,1,99999,'Codigo incorrecto!\n','\n¿Cual desea eliminar? Ingrese el codigo: ')
 
-					ban = False
-					ArcLogProd.seek(0,0)
-					while ArcLogProd.tell() < tamArch and ban == False:
-						puntero = ArcLogProd.tell()
-						regProd = pickle.load(ArcLogProd)
-						if int(regProd.codigo) == cod:
-							ArcLogProd.seek(puntero,0)
-							ban = True
-							regProd.codigo = 0
-							regProd.nombre = ' '
-							formatearProductos(regProd)
-							pickle.dump(regProd, ArcLogProd)
-							ArcLogProd.flush()
-					if ban == False:
-						print('No se ha encontrado el producto!')
+					if estaOProd(cod) != True or estaProdRubro(cod) != True:
+						ban = False
+						ArcLogProd.seek(0,0)
+						while ArcLogProd.tell() < tamArch and ban == False:
+							puntero = ArcLogProd.tell()
+							regProd = pickle.load(ArcLogProd)
+							if int(regProd.codigo) == cod:
+								ArcLogProd.seek(puntero,0)
+								ban = True
+								regProd.codigo = 0
+								regProd.nombre = ' '
+								regProd.cant_camiones = 0
+								regProd.neto = 0
+								regProd.patente_menos = ' '
+								regProd.cant_menos = 0
+								formatearProductos(regProd)
+								pickle.dump(regProd, ArcLogProd)
+								ArcLogProd.flush()
+						if ban == False:
+							print('\nNo se ha encontrado el producto!')
+					else:
+						print("\nNo se puede borrar este producto!")
 				else:
-					print("No hay productos dados de alta!")
+					print("\nNo hay productos dados de alta!")
+
 				print()
 				os.system('pause')
 				"""
@@ -334,11 +393,12 @@ def menu(type: str):
 				tamArch = os.path.getsize(ArcFisiProd)
 				if tamArch != 0:
 					while ArcLogProd.tell() < tamArch:
+						punt = ArcLogProd.tell()
 						regProd = pickle.load(ArcLogProd)
 						if int(regProd.codigo) != 0:
-							print(str(regProd.codigo) + '\t' + regProd.nombre)
+							print(str(regProd.codigo) + '\t' + regProd.nombre )
 				else:
-					print("No hay productos dados de alta!")
+					print("\nNo hay productos dados de alta!")
 
 				print()
 				os.system('pause')
@@ -357,10 +417,11 @@ def menu(type: str):
 				if tamArch != 0:
 					while ArcLogProd.tell() < tamArch:
 						regProd = pickle.load(ArcLogProd)
-						print(str(regProd.codigo) + '\t' + regProd.nombre)
+						if int(regProd.codigo) != 0:
+							print(str(regProd.codigo) + '\t' + regProd.nombre)
 
-					cod = ingresoInt('\n¿Cual desea eliminar? Ingrese el codigo: ')
-					cod = validarInt(cod,1,99999,'Codigo incorrecto!\n','¿Cual desea eliminar? Ingrese el codigo: ')
+					cod = ingresoInt('\n¿Cual desea modificar? Ingrese el codigo: ')
+					cod = validarInt(cod,1,99999,'Codigo incorrecto!\n','¿Cual desea modificar? Ingrese el codigo: ')
 					
 					ban = False
 					ArcLogProd.seek(0,0)
@@ -380,9 +441,9 @@ def menu(type: str):
 							pickle.dump(regProd, ArcLogProd)
 							ArcLogProd.flush()
 					if ban == False:
-						print('No se ha encontrado el producto!')
+						print('\nNo se ha encontrado el producto!')
 				else:
-					print("No hay productos dados de alta!")
+					print("\nNo hay productos dados de alta!")
 				print()
 				os.system('pause')
 				"""
@@ -445,7 +506,7 @@ def menu(type: str):
 						if int(regRubro.codigo) != 0:
 							print(str(regRubro.codigo) + '\t' + regRubro.nombre)
 				else:
-					print("No hay rubros dados de alta!")
+					print("\nNo hay rubros dados de alta!")
 				print()
 				os.system('pause')
 			elif menu_option == 'M':
@@ -480,7 +541,8 @@ def menu(type: str):
 					ArcLogProd.seek(0,0)
 					while ArcLogProd.tell() < tamArch:
 						regProd = pickle.load(ArcLogProd)
-						print(str(regProd.codigo) + '\t' + regProd.nombre)
+						if int(regProd.codigo) != 0:
+							print(str(regProd.codigo) + '\t' + regProd.nombre)
 					ArcLogRubro.seek(0,0)
 					ban = False
 					while ban == False:
@@ -496,7 +558,7 @@ def menu(type: str):
 								ban = True
 								regRuXPro.codigo_producto = cod
 						if ban == False:
-							print('No se ha encontrado el producto!')
+							print('\nNo se ha encontrado el producto!')
 
 					print('\nListado de rubro(s):')
 					print('\nCodigo\tNombre')
@@ -520,7 +582,7 @@ def menu(type: str):
 								ban = True
 								regRuXPro.codigo_rubro = cod
 						if ban == False:
-							print('No se ha encontrado el producto!')
+							print('\nNo se ha encontrado el producto!')
 
 
 					regRuXPro.valor_minimo_admitido = ingresoInt('\nIngrese el valor minimo admitido: ')
@@ -536,7 +598,7 @@ def menu(type: str):
 					pickle.dump(regRuXPro, ArcLogRuXPro)
 					ArcLogRuXPro.flush()
 				else:
-					print("No hay productos o rubros dados de alta!")
+					print("\nNo hay productos o rubros dados de alta!")
 				print()
 				os.system('pause')
 
@@ -557,7 +619,7 @@ def menu(type: str):
 						if int(regRuXPro.codigo_rubro) != 0:
 							print(str(regRuXPro.codigo_rubro) + '\t' + str(regRuXPro.codigo_producto) + '\t\t' + str(regRuXPro.valor_minimo_admitido) + '\t' + str(regRuXPro.valor_maximo_admitido))
 				else:
-					print("No hay rubros x productos dados de alta!")
+					print("\nNo hay rubros x productos dados de alta!")
 				print()
 				os.system('pause')
 			elif menu_option == 'M':
@@ -599,7 +661,8 @@ def menu(type: str):
 						if tamArch != 0:
 							while ArcLogProd.tell() < tamArch:
 								regProd = pickle.load(ArcLogProd)
-								print(str(regProd.codigo) + '\t' + regProd.nombre)
+								if int(regProd.codigo) != 0:
+									print(str(regProd.codigo) + '\t' + regProd.nombre)
 							ban2 = True
 							cod = ingresoInt('\n¿Cual desea asignar? Ingrese el codigo: ')
 							cod = validarInt(cod,1,99999,"Codigo incorrecto!\n",'\n¿Cual desea asignar? Ingrese el codigo: ')
@@ -611,7 +674,7 @@ def menu(type: str):
 								if int(regProd.codigo) == cod:
 									ban = True
 							if ban == False:
-								print('No se ha encontrado el producto!\n')
+								print('\nNo se ha encontrado el producto!\n')
 							else:
 								if estaSProd(cod) == False:
 									regSilos.codigo_producto = cod
@@ -620,13 +683,13 @@ def menu(type: str):
 									pickle.dump(regSilos, ArcLogSilos)
 									ArcLogSilos.flush()
 								else:
-									print("El producto ya tiene un silo asignado!\n")
+									print("\nEl producto ya tiene un silo asignado!")
 						else:
-							print("No hay productos dados de alta!\n")
+							print("\nNo hay productos dados de alta!")
 					else:
-						print("Codigo ya ingresado!\n")
+						print("\nCodigo ya ingresado!")
 				else:
-					print("No hay productos dados de alta!")
+					print("\nNo hay productos dados de alta!")
 
 				print()
 				os.system('pause')		
@@ -647,7 +710,7 @@ def menu(type: str):
 						if int(regSilos.codigo_silo) != 0:
 							print(str(regSilos.codigo_silo) + '\t' + regSilos.nombre + '\t' + str(regSilos.codigo_producto) + '\t\t' + str(regSilos.stock))
 				else:
-					print("No hay silos dados de alta!")
+					print("\nNo hay silos dados de alta!")
 				print()
 				os.system('pause')
 			elif menu_option == 'M':
@@ -685,7 +748,7 @@ def entrega_de_cupos():
 	print("MENU ENTREGA DE CUPOS")
 	print()
 	patente = str(input("Ingrese la patente: ").upper())
-	patente = validarString(patente,6,7,"Largo de la patente incorrecto!\n","\nIngrese la patente:")
+	patente = validarString(patente,6,7,"Largo de la patente incorrecto!\n","\nIngrese la patente: ")
 	patente = patente.ljust(7, ' ')
 	flag = True
 	while flag:
@@ -713,7 +776,8 @@ def entrega_de_cupos():
 		tamArch = os.path.getsize(ArcFisiProd)
 		while ArcLogProd.tell() < tamArch:
 			regProd = pickle.load(ArcLogProd)
-			print(str(regProd.codigo) + '\t' + regProd.nombre)
+			if int(regProd.codigo) != 0:
+				print(str(regProd.codigo) + '\t' + regProd.nombre)
 		cod = ingresoInt('\nIngrese el codigo del producto a asignar: ')
 		cod = validarInt(cod,1,99999,"Codigo incorrecto!\n","\nIngrese el codigo del producto a asignar: ")
 
@@ -735,7 +799,7 @@ def entrega_de_cupos():
 				pickle.dump(regOpera, ArcLogOpera)
 				ArcLogOpera.flush()
 		if ban == False:
-			print('No se ha encontrado el producto!')
+			print('\nNo se ha encontrado el producto!')
 
 	print()
 	"""
@@ -819,11 +883,11 @@ def recepcion():
 
 				formatearOperaciones(regOpera)
 				pickle.dump(regOpera, ArcLogOpera)
-				print("Camion arribado... \n")
+				print("\nCamion arribado... \n")
 				ArcLogOpera.flush()
 				ban = True
 		if ban == False:
-			print("No se han encontrado cupos para el dia de hoy!\n")
+			print("\nNo se han encontrado cupos para el dia de hoy!\n")
 		opcion: str = input('Desea ingresar otro camion? (S/N): ').upper()
 		while opcion not in ['YES', 'NO', 'N' , 'SI' , 'Y' , 'S']:
 			print('Opcion incorrecta!')
@@ -917,7 +981,7 @@ def registrar_calidad():
 			pickle.dump(regOpera, ArcLogOpera)
 			ArcLogOpera.flush()
 	else:
-		print("La patente ingresada no ha arribado o ya se ha registrado!\n")
+		print("\nLa patente ingresada no ha arribado o ya se ha registrado!\n")
 
 
 
@@ -957,7 +1021,7 @@ def registrar_peso_bruto():
 			ban = True
 
 	if ban == False:
-		print("La patente ingresada no se ha aprobado o ya se ha registrado!\n")
+		print("\nLa patente ingresada no se ha aprobado o ya se ha registrado!\n")
 
 	"""
 	buscar = str(input('Ingrese la patente a buscar: ').upper())
@@ -984,9 +1048,11 @@ def registrar_peso_bruto():
 def registrar_tara():
 	global ArcLogOpera, ArcFisiOpera
 	global ArcLogSilos, ArcFisiSilos
+	global ArcLogProd, ArcFisiProd
 
 	regOpera = operaciones()
 	regSilos = silos()
+	regProd = productos()
 
 	print("MENU REGISTRAR TARA")
 	print()
@@ -997,11 +1063,11 @@ def registrar_tara():
 	ban = False
 	ban2 = False
 	ArcLogOpera.seek(0,0)
-
 	while ArcLogOpera.tell() < tamArch and ban == False:
 
 		punt = ArcLogOpera.tell()
 		regOpera = pickle.load(ArcLogOpera)
+		
 		if patente == regOpera.patente and regOpera.estado == 'B':
 			#regOpera.estado == 'F'
 
@@ -1028,20 +1094,36 @@ def registrar_tara():
 					pickle.dump(regSilos, ArcLogSilos) #subo el nuevo registro
 					ArcLogSilos.flush()
 
+					cod = regOpera.codigo_producto
+					neto = int(regOpera.bruto) - tara
+					patente2 = regOpera.patente
 					regOpera.tara = tara
 					regOpera.estado = 'F' #paso a finalizado
 					ArcLogOpera.seek(punt,0)
 					formatearOperaciones(regOpera)
 					pickle.dump(regOpera, ArcLogOpera)
 					ArcLogOpera.flush()
+
+					ArcLogProd.seek(buscaProd(cod),0)
+					regProd = pickle.load(ArcLogProd)
+					ArcLogProd.seek(buscaProd(cod),0)
+					regProd.cant_camiones = int(regProd.cant_camiones) + 1
+					regProd.neto = int(regProd.neto) + neto
+					if int(regProd.cant_menos) == 0 or int(regProd.cant_menos) > neto:
+						regProd.cant_menos = neto
+						regProd.patente_menos = patente2
+					formatearProductos(regProd)
+					pickle.dump(regProd, ArcLogProd)
+					ArcLogProd.flush()
+
 					print("\nTara asignada correctamente!\n")
 
 				ban2 = True
 			ban = True
 	if ban == False:
-		print("La patente no tiene peso bruto registrado o ya se ha ingresado la tara!\n")
+		print("\nLa patente no tiene peso bruto registrado o ya se ha ingresado la tara!\n")
 	elif ban2 == False:
-		print('No hay silos asignados a este producto!\n')
+		print('\nNo hay silos asignados a este producto!\n')
 
 	"""
 	buscar = str(input('Ingrese la patente a buscar: ').upper())
@@ -1125,105 +1207,30 @@ def reportes():
 		ArcLogOpera.seek(0,0)
 		while ArcLogOpera.tell() < tamArchO:
 			regOpera = pickle.load(ArcLogOpera)
-			if regOpera.estado != "P":
+			if regOpera.estado == "F":
 				recibidos = recibidos + 1
 		print("\n-Cantidad de camiones recibidos: ", recibidos)
 
 		#3
-		print("\n-Cantidad total de camiones de cada producto:")
+		print('\nProducto(s):')
 		if os.path.getsize(ArcFisiProd) != 0:
 			ArcLogProd.seek(0,0)
 			tamArchP = os.path.getsize(ArcFisiProd)
 			while ArcLogProd.tell() < tamArchP:
 				regProd = pickle.load(ArcLogProd)
-				ArcLogOpera.seek(0,0)
-				cont = 0
-				while ArcLogOpera.tell() < tamArchO:
-					regOpera = pickle.load(ArcLogOpera)
-					if regOpera.codigo_producto == regProd.codigo:
-						cont += 1
-				print(str.rstrip(regProd.codigo) + " " + str.rstrip(regProd.nombre) + ": " + str(cont) + " camion(es)")
+				if int(regProd.codigo) != 0:
+					print(f'\n--{regProd.nombre.rstrip()}--')
+					print('Cantidad de total de camiones: ' + str(regProd.cant_camiones))	
+					print(f'Peso neto total: ' + str(regProd.neto))
+					if int(regProd.cant_camiones) == 0:
+						promedio = 0
+					else:
+						promedio = int(regProd.neto)/int(regProd.cant_camiones)
+					print(f'Promedio de peso neto por camion: {promedio:.2f}')
+					print(f'Patente del camion que menos descargo: {regProd.patente_menos}')
+
 		else:
-			print("No hay productos dados de alta!")
-
-		"""
-		i = 0
-		ArcLogProd.seek(0,0)
-		tamArchP = os.path.getsize(ArcFisiProd)
-		while ArcLogProd.tell() < tamArchP:
-			regProd = pickle.load(ArcLogProd)
-			if contenido(regProd.codigo, M[:][:]) == False:
-				M[i][0] = regProd.codigo
-				#M[i][1] = M[i][1] + 1
-				i = i + 1
-
-		ArcLogOpera.seek(0,0)
-		while ArcLogOpera.tell() < tamArchO:
-			regOpera = pickle.load(ArcLogOpera)
-			j = 0
-			for j in range(i):
-				if regOpera.codigo_producto == M[j][0]:
-					M[j][1] += 1
-		"""
-		#4
-		print("\n-Peso neto total de cada producto:")
-		if os.path.getsize(ArcFisiProd) != 0:
-			ArcLogProd.seek(0,0)
-			tamArchP = os.path.getsize(ArcFisiProd)
-			while ArcLogProd.tell() < tamArchP:
-				regProd = pickle.load(ArcLogProd)
-				ArcLogOpera.seek(0,0)
-				cont = 0
-				while ArcLogOpera.tell() < tamArchO:
-					regOpera = pickle.load(ArcLogOpera)
-					if regOpera.codigo_producto == regProd.codigo and regOpera.estado == 'F':
-						cont += int(regOpera.bruto) - int(regOpera.tara)
-				print(str.rstrip(regProd.codigo) + " " + str.rstrip(regProd.nombre) + ": " + str(cont))
-		else:
-			print("No hay productos dados de alta!")
-		"""
-		i = 0
-		print("\nPeso neto por producto:")
-		print("\nCODIGO\tPESO NETO")
-		ArcLogSilos.seek(0,0)
-		tamArchS = os.path.getsize(ArcFisiSilos)
-		while ArcLogSilos.tell() < tamArchS:
-			regSilos = pickle.load(ArcLogSilos)
-			print(regSilos.codigo_producto + "\t\t" +regSilos.stock)
-			while M[i][0]!= 0:
-				if M[i][0] == regSilos.codigo_producto:
-					M[i][2] = regSilos.stock
-				i = i + 1
-		"""
-
-		
-		print("\nPromedio del peso neto de producto por camion:")
-		"""
-		j = 0
-		print("\nCODIGO\tPROMEDIO")
-		for j in range(i):
-			print(M[j][0] + "\t" + M[j][2]/M[j][1])
-
-		#5
-		j = 0
-		ArcLogOpera.seek(0,0)
-		while ArcLogOpera.tell() < tamArchO:
-			regOpera = pickle.load(ArcLogOpera)
-			for j in range(i):
-				if M[j][0] == regOpera.codigo_producto:
-					neto = regOpera.bruto - regOpera.tara
-					if M[j][3] == 0: #es el primero en comparar
-						M[j][3] = neto
-						M[j][4] = regOpera.patente
-					elif neto < M[j][3]:
-						M[j][3] = neto
-						M[j][4] = regOpera.patente
-		"""
-		j = 0
-		print("\nPatente del camión de cada producto que menor cantidad de dicho producto descargo:")
-		print("\nCODIGO\tPATENTE\tPESO NETO")
-		for j in range(i):
-			print(M[j][0],"\t",M[j][4], M[j][3])
+			print("\nNo hay productos dados de alta!")
 		
 		"""
 		os.system('cls')
@@ -1250,7 +1257,8 @@ def reportes():
 		ordenar_mostrar(producto[:],patentes[:],pesos_brutos[:],taras[:])
 		"""
 	else:
-		print("No se han hecho operaciones!\n")
+		print("\nNo se han hecho operaciones!\n")
+	print()
 
 # Enteros: i, h, aux
 # Char: aux
